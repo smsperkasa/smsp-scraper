@@ -64,14 +64,18 @@ class SMSPScraper:
         except:
             logger.warning(f"Failed to move to page {page} for Juragan Material")
 
-    def collect_hrefs_from_pagination(self):
+    def collect_hrefs_from_pagination(self, store, should_include, should_not_include):
         try:
             a_elements = self.driver.find_elements(By.TAG_NAME, "a")
             rets = [a.get_attribute("href") for a in a_elements]
-            logger.info("Successfully obtained hrefs from pagination")
-            return [ret for ret in rets if "produk" in ret and "besi-beton" in ret]
+            logger.info(f"Successfully obtained hrefs from pagination for {store}")
+            for include in should_include:
+                rets = [ret for ret in rets if include in ret]
+            for not_include in should_not_include:
+                rets = [ret for ret in rets if not_include not in ret]
+            return rets
         except:
-            logger.warning("Failed to obtain hrefs from pagination")
+            logger.warning(f"Failed to obtain hrefs from pagination")
             return []
 
     def scrape_histeel_price_pages(self, product_links):
@@ -93,7 +97,7 @@ class SMSPScraper:
                 ret.append(
                     {
                         "product": product_element.text,
-                        "price": int(
+                        "price": float(
                             price_element.text.replace("Rp ", "").replace(",", "")
                         ),
                     }
@@ -136,7 +140,7 @@ class SMSPScraper:
                 ret.append(
                     {
                         "product": product_element.text,
-                        "price": int(
+                        "price": float(
                             price_element.text.replace("Rp ", "").replace(".", "")
                         ),
                         "weight": float(
@@ -161,11 +165,11 @@ class SMSPScraper:
             "https://juraganmaterial.id/kategori/besi-beton-and-wiremesh/besi-beton"
         )
 
-        ret = self.collect_hrefs_from_pagination()
+        ret = self.collect_hrefs_from_pagination("Juragan Material", ["produk", "besi-beton"], [])
 
         for page in range(2, 8):
             self.scrape_juragan_move_to_next_page(page)
-            ret += self.collect_hrefs_from_pagination()
+            ret += self.collect_hrefs_from_pagination("Juragan Material", ["produk", "besi-beton"], [])
 
         return self.scrape_juragan_material_price_pages(ret)
 
@@ -206,7 +210,7 @@ class SMSPScraper:
                 ret.append(
                     {
                         "product": product_element.text,
-                        "price": int(
+                        "price": float(
                             price_element.text.replace("Rp ", "").replace(",", "")
                         ),
                     }
@@ -361,4 +365,54 @@ class SMSPScraper:
             except:
                 logger.warning(f"Failed to scrape for {beton_option["product"]}")
         return ret
+    
+    def scrape_niaga_sinar_sentosa_price_pages(self, product_links):
+        ret = []
+        
+        for product_link in product_links:
+            try:
+                self.driver.get(product_link)
+                
+                product_element = WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located(
+                        (
+                            By.CSS_SELECTOR,
+                            "h1.product_title.entry-title"
+                        )
+                    )
+                )
+                
+                
+                price_element = WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located(
+                        (
+                            By.XPATH,
+                            "/html/body/div[1]/div[5]/div[2]/div/div/div[2]/div[1]/div[2]/p[2]/span/bdi"
+                        )
+                    )
+                )
+                
+                ret.append(
+                    {
+                        "product": product_element.text.replace("Harga ", "").replace("Jual ", ""),
+                        "price":
+                            float(price_element.text.replace("Rp", "").replace(".", "")),
+                    }
+                )
+                
+                logger.info(
+                    f"Successfully scraped Niaga Sinar Sentosa page for {product_link}"
+                )
+            except:
+                logger.warning(
+                    f"Failed to scrape Niaga Sinar Sentosa page for {product_link}"
+                )
+        
+        return ret
 
+    def scrape_niaga_sinar_sentosa_price(self):
+        self.driver.get("https://www.niagasinarsentosa.co.id/product-category/besi/besi-beton/?per_page=64")
+        
+        ret = self.collect_hrefs_from_pagination("Niaga Sinar Sentosa", ["besi-beton"], ["product-category", "per-page"])
+        
+        return self.scrape_niaga_sinar_sentosa_price_pages(ret)

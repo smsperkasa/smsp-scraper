@@ -25,5 +25,6 @@ class SnowflakeUploader:
                     table, con=conn, schema=schema, if_exists="append", index=False
                 )
             logger.info("Uploaded to Snowflake successfully")
-        except:
+        except Exception as e:
+            print(e)
             logger.warning("Cannot upload to Snowflake")
