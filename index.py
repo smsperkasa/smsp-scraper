@@ -202,13 +202,14 @@ def test():
 
 
 def temp():
-    external_price_scrape_df = pd.read_csv("external_price_scrape.csv")
-    snowflake_uploader.upload_data_to_snowflake(
-        "RAW", "GOOGLE_SHEET_PRICING", "EXTERNAL_PRICE_SCRAPE", external_price_scrape_df
+    iron_ore_price = smsp_scraper.scrape_trading_view_iron_ore_price()
+    iron_ore_price_idr = (
+        currency_converter.get_exchange_rates_latest("USD", "IDR") * iron_ore_price
     )
+    print(iron_ore_price_idr)
 
 
 if __name__ == "__main__":
-    perform_daily_scraping()
+    # perform_daily_scraping()
     # test()
-    # temp()
+    temp()

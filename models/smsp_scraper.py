@@ -416,3 +416,19 @@ class SMSPScraper:
         ret = self.collect_hrefs_from_pagination("Niaga Sinar Sentosa", ["besi-beton"], ["product-category", "per-page"])
         
         return self.scrape_niaga_sinar_sentosa_price_pages(ret)
+    
+    def scrape_trading_view_iron_ore_price(self):
+        try:
+            self.driver.get("https://www.tradingview.com/symbols/SGX-FEF1!/")
+            
+            price_element = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[3]/div[4]/div[2]/div[1]/div[1]/div/div/div/div[3]/div[1]/div/div[1]/span[1]/span")))
+            
+            res = price_element.text
+            
+            logger.info(f"Successfully scraped iron ore from TradingView with price {res}")
+            
+            return float(res)
+        
+        except:
+            logger.warning(f"Failed to scrape iron ore price from TradingView")
+        
