@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  smsp-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: smsp-scraper:latest
+    container_name: smsp-scraper
+    restart: on-failure
+
+networks:
+  smsp-network:
+    external: true
