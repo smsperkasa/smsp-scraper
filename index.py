@@ -265,5 +265,6 @@ if __name__ == "__main__":
     # perform_daily_scraping()
     # test()
     app.run(debug=True)
+    temp()
 
     # temp()
