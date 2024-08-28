@@ -1,10 +1,15 @@
+from datetime import datetime
+
 import re
 
 from selenium import webdriver as wd
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium_stealth import stealth
+
+from bs4 import BeautifulSoup
 
 from logger.logging_config import logger
 
@@ -20,7 +25,21 @@ class SMSPScraper:
         chrome_options.add_argument("--ignore-certificate_errors")
         chrome_options.add_argument("--mute-audio")
         chrome_options.add_argument("--disable-extensions")
+        
+                 # browser run in headless mode
+        chrome_options.add_argument('--headless=new')
+        #disable gpu for preventing website get render
+        chrome_options.add_argument('--disable-gpu')
+        #preventing website run on sandbox
+        chrome_options.add_argument('--no-sandbox')
+        #preventing bot detection
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        # simulate a full-screen window to ensure all content loads correctly
+        chrome_options.add_argument('--window-size=1920,1080')
+        #define user agent to spoofing
+        chrome_options.add_argument('--user-agent=Mozilla/5.0 ...')
         chrome_options.add_experimental_option("detach", True)
+        
         self.driver = wd.Chrome(options=chrome_options)
         # self.driver = wd.Remote(command_executor="http://localhost:4444/wd/hub", options=chrome_options)
 
@@ -427,8 +446,88 @@ class SMSPScraper:
             
             logger.info(f"Successfully scraped iron ore from TradingView with price {res}")
             
-            return float(res)
+            return False ,float(res)
         
-        except:
-            logger.warning(f"Failed to scrape iron ore price from TradingView")
-        
+        except Exception as e:
+            logger.warning(f"Failed to scrape iron ore price from TradingView", e)
+            return True, e
+    
+    
+    def scrape_trading_economics_macroeconomics(self):
+        def get_actual_value_from_metric(rows, index):
+            try:
+                row = rows[index]
+                cells = row.find_all('td')
+                value = cells[1].text.strip()
+                return value
+            except Exception as e:
+                print(f"Error extracting value from row {index}:", e)
+                return None
+
+        def store_result(source, type, value, unit):
+            return {
+                "As_For": datetime.now(),
+                "Source": source,
+                "Type": type,
+                "Value": value,
+                "Unit": unit
+            }
+
+        def get_data(url):
+            try:
+                # Navigate to the website
+                self.driver.get(url)
+                
+                # wait for all elements in page present
+                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'table-hover')))
+
+                html = self.driver.page_source
+                soup = BeautifulSoup(html, "html.parser")
+
+                # Extract the tables
+                tables = soup.find_all('table', {'class': 'table table-hover'})
+                if tables:
+                    first_table = tables[0]
+                    second_table = tables[1]
+
+                    first_rows = first_table.find_all('tr')
+                    second_rows = second_table.find_all('tr')
+                    # Extract metrics
+                    metrics = {
+                        "Stock Market": get_actual_value_from_metric(first_rows, 1),
+                        "GDP Growth Rate": get_actual_value_from_metric(second_rows, 1),
+                        "Inflation Rate": get_actual_value_from_metric(second_rows, 4),
+                        "Interest Rate": get_actual_value_from_metric(second_rows, 6),
+                        "Manufacturing PMI": get_actual_value_from_metric(second_rows, 9)
+                    }
+
+                    # Store results
+                    units = {
+                        "Stock Market": "points",
+                        "GDP Growth Rate": "%",
+                        "Inflation Rate": "%",
+                        "Interest Rate": "%",
+                        "Manufacturing PMI": "points"
+                    }
+
+                    macroeconomics_list = [
+                        store_result("Trading Economics Website", metric_type, value, units[metric_type])
+                        for metric_type, value in metrics.items()
+                    ]
+                        
+                    return False, macroeconomics_list
+                else:
+                    print("Table not found")
+                    print(tables)
+            except Exception as e:
+                logger.warning(f"Error retrieving data from the website:", e)
+                return True, e
+
+      
+        try:
+            url = 'https://tradingeconomics.com/indonesia/forecast'
+            macroeconomics_list = get_data(url)
+            return macroeconomics_list
+           
+        except Exception as e:
+            print("Error in main function:", e)
