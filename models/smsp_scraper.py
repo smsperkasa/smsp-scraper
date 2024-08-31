@@ -380,9 +380,11 @@ class SMSPScraper:
                 ret.append(
                     {"product": beton_option["product"], "price": float(price_element.text.replace("Rp", "").replace(",-", "").replace(".", ""))}
                 )
-                logger.info(f"Succeeded scraping for {beton_option["product"]}")
+                atr_beton_option = beton_option["product"]
+                logger.info(f"Succeeded scraping for {atr_beton_option}")
             except:
-                logger.warning(f"Failed to scrape for {beton_option["product"]}")
+                atr_beton_option = beton_option["product"]
+                logger.warning(f"Failed to scrape for {atr_beton_option}")
         return ret
     
     def scrape_niaga_sinar_sentosa_price_pages(self, product_links):
