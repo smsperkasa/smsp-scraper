@@ -1,7 +1,7 @@
 beautifulsoup4==4.12.3
 flask==3.0.3
 flask_restful==0.3.10
-pandas==2.2.2
+pandas==2.1.4
 pandas-datareader==0.10.0
 selenium==4.22.0
 selenium-stealth==1.0.6
