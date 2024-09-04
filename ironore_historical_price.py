@@ -20,7 +20,7 @@ if response.status_code == 200:
     data = response.json()['data']
     
     last_stored_date = data[-1]["record-date"]
-    stored_json["ironore"]["last_stored_date"] = last_stored_date
+    stored_json["ironore"]["last_stored_date"] = last_stored_date + " 16:00:00"
     # Write the updated data back to the JSON file
     with open(file_path, 'w') as file:
         json.dump(stored_json, file, indent=4)  # `indent=4` for pretty printing
