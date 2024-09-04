@@ -1,6 +1,11 @@
 from datetime import datetime
 
 import re
+import pandas as pd
+import requests
+import json
+
+import os
 
 from selenium import webdriver as wd
 from selenium import webdriver
@@ -380,9 +385,11 @@ class SMSPScraper:
                 ret.append(
                     {"product": beton_option["product"], "price": float(price_element.text.replace("Rp", "").replace(",-", "").replace(".", ""))}
                 )
-                logger.info(f"Succeeded scraping for {beton_option["product"]}")
+                beton_product = beton_option["product"]
+                logger.info(f"Succeeded scraping for {beton_product}")
             except:
-                logger.warning(f"Failed to scrape for {beton_option["product"]}")
+                beton_product = beton_option["product"]
+                logger.warning(f"Failed to scrape for {beton_product}")
         return ret
     
     def scrape_niaga_sinar_sentosa_price_pages(self, product_links):
@@ -531,3 +538,52 @@ class SMSPScraper:
            
         except Exception as e:
             print("Error in main function:", e)
+            
+    def sgx_ironore_price(self):
+        url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFV24"
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, '../global.json')
+
+        response = requests.get(url)
+        if response.status_code == 200:
+        # Parse JSON response
+            data = response.json()['data']
+            
+            with open(file_path, 'r') as file:
+                stored_date = json.load(file)
+            
+            last_stored_date = pd.to_datetime(stored_date["ironore"]["last-stored-date"])
+            last_record_date = pd.to_datetime(data[-1]["record-date"] + " 16:00:00")
+            
+            if(last_stored_date >= last_record_date):
+                return ["not doing anything"]
+             
+            # Find the index where the date becomes greater than input_datetime
+            start_index = len(data) - 1
+            for i in range(len(data)-1, 0, -1):
+                item = data[i]
+                record_date_str = item['record-date']
+                record_datetime = pd.to_datetime(record_date_str + " 16:00:00")
+                if record_datetime == last_stored_date:
+                    start_index = i
+                    break
+                
+            filtered_data = data[start_index + 1:] if start_index != len(data) - 1 else []
+   
+            # Select specific fields
+            selected_data = [
+                {
+                    "AS_OF": pd.to_datetime(item["record-date"] + " 16:00"),
+                    "SOURCE": "sgx.com",
+                    "TYPE": "IRON ORE CLOSE PRICE",
+                    "VALUE" : item["daily-settlement-price"],
+                    "UNIT": "USD/tonne"
+                }
+                for item in filtered_data
+            ]
+            
+            # Convert JSON data to DataFrame
+            return selected_data
+        else:
+            error_message = response.text
+            logger.info(f"Successfully scraped iron ore from TradingView with price {error_message}")

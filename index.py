@@ -12,14 +12,14 @@ from models.smsp_scraper import SMSPScraper
 from models.snowflake_uploader import SnowflakeUploader
 
 # Initialize Flask app and API
-app = Flask(__name__)
-api = Api(app)
+# app = Flask(__name__)
+# api = Api(app)
 
 smsp_scraper = SMSPScraper()
 snowflake_uploader = SnowflakeUploader()
 currency_converter = CurrencyConverter()
 
-@app.route('/perform_daily_scraping', methods=['POST'])
+# @app.route('/perform_daily_scraping', methods=['POST'])
 # def perform_daily_scraping():
 #     sina_price_cny = smsp_scraper.scrape_sina_price_specific()
 #     sina_price_idr = sina_price_cny * currency_converter.get_exchange_rates_latest(
@@ -28,7 +28,7 @@ currency_converter = CurrencyConverter()
 #     snowflake_data = []
 #     snowflake_data.append(
 #         [
-#             datetime.now().date().strftime("%Y-%m-%d"),
+#             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 #             "-",
 #             "Besi Beton",
 #             "SMSP Scraper",
@@ -47,7 +47,7 @@ currency_converter = CurrencyConverter()
 #     for juragan_price in juragan_prices:
 #         snowflake_data.append(
 #             [
-#                 datetime.now().date().strftime("%Y-%m-%d"),
+#                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 #                 "-",
 #                 juragan_price["product"],
 #                 "SMSP Scraper",
@@ -66,7 +66,7 @@ currency_converter = CurrencyConverter()
 #     for histeel_price in histeel_prices:
 #         snowflake_data.append(
 #             [
-#                 datetime.now().date().strftime("%Y-%m-%d"),
+#                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 #                 "-",
 #                 histeel_price["product"],
 #                 "SMSP Scraper",
@@ -85,7 +85,7 @@ currency_converter = CurrencyConverter()
 #     for sbg_price in sbg_prices:
 #         snowflake_data.append(
 #             [
-#                 datetime.now().date().strftime("%Y-%m-%d"),
+#                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 #                 sbg_price[0],
 #                 sbg_price[1],
 #                 "SMSP Scraper",
@@ -104,7 +104,7 @@ currency_converter = CurrencyConverter()
 #     for artha_beton_price in artha_beton_prices:
 #         snowflake_data.append(
 #             [
-#                 datetime.now().date().strftime("%Y-%m-%d"),
+#                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 #                 "-",
 #                 artha_beton_price["product"],
 #                 "SMSP Scraper",
@@ -123,7 +123,7 @@ currency_converter = CurrencyConverter()
 #     for siskaperbapo_price in siskaperbapo_prices:
 #         snowflake_data.append(
 #             [
-#                 datetime.now().date().strftime("%Y-%m-%d"),
+#                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 #                 "-",
 #                 siskaperbapo_price["product"],
 #                 "SMSP Scraper",
@@ -225,7 +225,7 @@ currency_converter = CurrencyConverter()
 #     )
 
 
-@app.route('/temp', methods=['POST'])
+# @app.route('/temp', methods=['POST'])
 def temp():
     try:
 
@@ -240,31 +240,30 @@ def temp():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    
-@app.route('/api/resource/', methods=['POST'])
-def create_resource():
-    if request.is_json:
-        data = request.get_json()
-        
-        # Define required fields
-        required_fields = ['key']  # List of required fields
-        
-        # Check for missing fields
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return jsonify({'error': f'Missing required field(s): {", ".join(missing_fields)}'}), 400
-        
-        # Process the data
-        return jsonify({'received': data}), 200
-    else:
-        return jsonify({'error': 'Invalid Content-Type, expected application/json'}), 415
-
-# Add resources to API
+def test():
+    smsp_scraper = SMSPScraper()
+    historical_ironore = smsp_scraper.sgx_ironore_price()
+    print(historical_ironore)
+    # snowflake_uploader = SnowflakeUploader()
+    # snowflake_data = []
+    # snowflake_df = pd.DataFrame(
+    #     snowflake_data,
+    #     columns=[
+    #         "AS_OF",
+    #         "SOURCE",
+    #         "TYPE",
+    #         "VALUE",
+    #         "UNIT",
+    #     ],
+    # )
+    # snowflake_uploader.upload_data_to_snowflake(
+    #     "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATOR", snowflake_df
+    # )
 
 if __name__ == "__main__":
     # perform_daily_scraping()
     # test()
-    app.run(debug=True)
-    temp()
-
+    # app.run(debug=True)
     # temp()
+
+    test()
