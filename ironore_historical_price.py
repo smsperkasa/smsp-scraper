@@ -16,14 +16,14 @@ if response.status_code == 200:
 # Parse JSON response
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
-            record_date = json.load(file)
+            stored_json = json.load(file)
     data = response.json()['data']
     
     last_stored_date = data[-1]["record-date"]
-    record_date["ironore"]["last_stored_date"] = last_stored_date
+    stored_json["ironore"]["last_stored_date"] = last_stored_date
     # Write the updated data back to the JSON file
     with open(file_path, 'w') as file:
-        json.dump(data, file, indent=4)  # `indent=4` for pretty printing
+        json.dump(stored_json, file, indent=4)  # `indent=4` for pretty printing
     
     selected_data = [
                 {
