@@ -550,9 +550,9 @@ class SMSPScraper:
             data = response.json()['data']
             
             with open(file_path, 'r') as file:
-                stored_date = json.load(file)
+                stored_json = json.load(file)
             
-            last_stored_date = pd.to_datetime(stored_date["ironore"]["last-stored-date"])
+            last_stored_date = pd.to_datetime(stored_json["ironore"]["last-stored-date"])
             last_record_date = pd.to_datetime(data[-1]["record-date"] + " 16:00:00")
             
             if(last_stored_date >= last_record_date):
@@ -568,7 +568,7 @@ class SMSPScraper:
                     start_index = i
                     break
                 
-            filtered_data = data[start_index + 1:] if start_index != len(data) - 1 else []
+            filtered_data = data[start_index+1:] if start_index != len(data) - 1 else []
    
             # Select specific fields
             selected_data = [
@@ -582,7 +582,12 @@ class SMSPScraper:
                 for item in filtered_data
             ]
             
-            # Convert JSON data to DataFrame
+            #rewrite json file
+            stored_json["ironore"]["last-stored-date"] = str(last_record_date)
+            # Write the updated data back to the JSON file
+            with open(file_path, 'w') as file:
+                json.dump(stored_json, file, indent=4)  # `indent=4` for pretty printing
+                
             return selected_data
         else:
             error_message = response.text

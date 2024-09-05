@@ -10,7 +10,6 @@ file_path = os.path.join(script_dir, 'global.json')
 
 snowflake_uploader = SnowflakeUploader()
 
-
 response = requests.get(url)
 if response.status_code == 200:
 # Parse JSON response
@@ -46,9 +45,9 @@ if response.status_code == 200:
         ],
     )
     
-    print(snowflake_df)
+    # print(snowflake_df)
     
-    snowflake_uploader.upload_data_to_snowflake(
-        "RAW", "EXTERNAL_INDICATOR", "IRON_ORE_INDICATOR", snowflake_df
-    )
+    # snowflake_uploader.upload_data_to_snowflake(
+    #     "RAW", "EXTERNAL_INDICATOR", "IRON_ORE_INDICATOR", snowflake_df
+    # )
     

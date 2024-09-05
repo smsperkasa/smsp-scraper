@@ -244,9 +244,13 @@ def temp():
         return jsonify({"error": str(e)}), 500
 
 def test():
-    smsp_scraper = SMSPScraper()
-    historical_ironore = smsp_scraper.sgx_ironore_price()
-    print(historical_ironore)
+    try:
+        smsp_scraper = SMSPScraper()
+        historical_ironore = smsp_scraper.sgx_ironore_price()
+        print(historical_ironore)
+    except Exception as e:
+        print(e)
+    
     # snowflake_uploader = SnowflakeUploader()
     # snowflake_data = []
     # snowflake_df = pd.DataFrame(
