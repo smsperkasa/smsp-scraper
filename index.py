@@ -234,9 +234,12 @@ def temp():
         
         if is_error_indonesia_indicator or is_error_iron_ore:
             message = indonesia_indicator if is_error_indonesia_indicator else iron_ore
-            return jsonify({"status": "ERROR", "message": message}), 500
+            print("iron ore:",'\n', iron_ore)
+            print("indonesia indicator", '\n', indonesia_indicator)
+            # return jsonify({"status": "ERROR", "message": message}), 500
         else:
-            return jsonify({"status": "OK"}), 200
+            print("iron ore:",'\n', iron_ore)
+            print("indonesia indicator", '\n', indonesia_indicator)            # return jsonify({"status": "OK"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -262,8 +265,8 @@ def test():
 
 if __name__ == "__main__":
     # perform_daily_scraping()
-    # test()
+    test()
     # app.run(debug=True)
     # temp()
 
-    test()
+    # test()
