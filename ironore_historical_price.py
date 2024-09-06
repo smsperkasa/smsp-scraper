@@ -26,7 +26,7 @@ if response.status_code == 200:
     
     selected_data = [
                 {
-                    "AS_OF": pd.to_datetime(item["record-date"] + " 16:00"),
+                    "AS OF": pd.to_datetime(item["record-date"] + " 16:00"),
                     "SOURCE": "sgx.com",
                     "TYPE": "IRON ORE CLOSE PRICE",
                     "VALUE" : item["daily-settlement-price"],
@@ -37,7 +37,7 @@ if response.status_code == 200:
     snowflake_df = pd.DataFrame(
     selected_data,
     columns=[
-        "AS_OF",
+        "AS OF",
         "SOURCE",
         "TYPE",
         "VALUE",

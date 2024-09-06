@@ -473,11 +473,11 @@ class SMSPScraper:
 
         def store_result(source, type, value, unit):
             return {
-                "As_For": datetime.now(),
-                "Source": source,
-                "Type": type,
-                "Value": value,
-                "Unit": unit
+                "AS OF": datetime.now(),
+                "SOURCE": source,
+                "TYPE": type,
+                "VALUE": value,
+                "UNIT": unit
             }
 
         def get_data(url):
