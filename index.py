@@ -246,8 +246,11 @@ def temp():
 def test():
     try:
         smsp_scraper = SMSPScraper()
+        status,indonesia_indicator = smsp_scraper.scrape_trading_economics_macroeconomics()
         historical_ironore = smsp_scraper.sgx_ironore_price()
-        print(historical_ironore)
+        print("IRONORE CURRENT PRICE",'\n',historical_ironore, '\n')
+        print("INDONESIA INDICATOR",'\n',indonesia_indicator, '\n')
+
     except Exception as e:
         print(e)
     
