@@ -522,13 +522,13 @@ class SMSPScraper:
                         for metric_type, value in metrics.items()
                     ]
                         
-                    return False, macroeconomics_list
+                    return macroeconomics_list
                 else:
                     print("Table not found")
                     print(tables)
             except Exception as e:
                 logger.warning(f"Error retrieving data from the website:", e)
-                return True, e
+                return e
 
       
         try:
