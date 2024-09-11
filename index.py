@@ -215,7 +215,7 @@ def perform_daily_scraping():
     
     iron_ore_historical = smsp_scraper.sgx_ironore_price()
     snowflake_df = pd.DataFrame(
-        indonesia_macroeconomics,
+        iron_ore_historical,
         columns=[
             "AS_OF",
             "SOURCE",

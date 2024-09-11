@@ -473,7 +473,7 @@ class SMSPScraper:
 
         def store_result(source, type, value, unit):
             return {
-                "AS OF": datetime.now(),
+                "AS_OF": datetime.now(),
                 "SOURCE": source,
                 "TYPE": type,
                 "VALUE": value,
