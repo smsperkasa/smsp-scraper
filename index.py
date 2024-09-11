@@ -57,7 +57,7 @@ def perform_daily_scraping():
     )
     
     snowflake_uploader.upload_data_to_snowflake(
-        "RAW", "EXTERNAL_INDICATOR", "IRON_ORE_INDICATOR", snowflake_df
+        "RAW", "EXTERNAL_INDICATORS", "CHINESE_REBAR_TRADINGS", snowflake_df
     )
     juragan_prices = smsp_scraper.scrape_juragan_material_price()
     snowflake_data = []
@@ -210,7 +210,7 @@ def perform_daily_scraping():
         ],
     )
     snowflake_uploader.upload_data_to_snowflake(
-        "RAW", "EXTERNAL_INDICATOR", "INDONESIA_INDICATOR", snowflake_df
+        "RAW", "EXTERNAL_INDICATORS", "INDONESIA_INDICATORS", snowflake_df
     )
     
     iron_ore_historical = smsp_scraper.sgx_ironore_price()
@@ -225,7 +225,7 @@ def perform_daily_scraping():
         ],
     )
     snowflake_uploader.upload_data_to_snowflake(
-        "RAW", "EXTERNAL_INDICATOR", "IRON_ORE_INDICATOR", snowflake_df
+        "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
     )
     
     
