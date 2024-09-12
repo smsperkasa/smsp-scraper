@@ -214,19 +214,20 @@ def perform_daily_scraping():
     )
     
     iron_ore_historical = smsp_scraper.sgx_ironore_price()
-    snowflake_df = pd.DataFrame(
-        iron_ore_historical,
-        columns=[
-            "AS_OF",
-            "SOURCE",
-            "TYPE",
-            "VALUE",
-            "UNIT",
-        ],
-    )
-    snowflake_uploader.upload_data_to_snowflake(
-        "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
-    )
+    if (len(iron_ore_historical) != 0):
+        snowflake_df = pd.DataFrame(
+            iron_ore_historical,
+            columns=[
+                "AS_OF",
+                "SOURCE",
+                "TYPE",
+                "VALUE",
+                "UNIT",
+            ],
+        )
+        snowflake_uploader.upload_data_to_snowflake(
+            "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
+        )
     
     
 
@@ -279,21 +280,21 @@ def perform_daily_scraping():
 def test():
     try:
         smsp_scraper = SMSPScraper()
-        status,indonesia_indicator = smsp_scraper.scrape_trading_economics_macroeconomics()
-        histeel = smsp_scraper.scrape_histeel_price()
-        sina = smsp_scraper.scrape_sina_price_specific()
-        juragan = smsp_scraper.scrape_juragan_material_price()
-        niaga = smsp_scraper.scrape_niaga_sinar_sentosa_price()
-        siska = smsp_scraper.scrape_siskaperbapo_price()
+        indonesia_indicator = smsp_scraper.scrape_trading_economics_macroeconomics()
+        # histeel = smsp_scraper.scrape_histeel_price()
+        # sina = smsp_scraper.scrape_sina_price_specific()
+        # juragan = smsp_scraper.scrape_juragan_material_price()
+        # niaga = smsp_scraper.scrape_niaga_sinar_sentosa_price()
+        # siska = smsp_scraper.scrape_siskaperbapo_price()
 
         historical_ironore = smsp_scraper.sgx_ironore_price()
         print("IRONORE CURRENT PRICE",'\n',historical_ironore, '\n')
         print("INDONESIA INDICATOR",'\n',indonesia_indicator, '\n')
-        print("HISTEEL IRON PRICE",'\n',histeel, '\n')
-        print("SINA IRON PRICE",'\n',sina, '\n')
-        print("JURAGAN IRON PRICE",'\n',juragan, '\n')
-        print("NIAGA IRON PRICE",'\n',niaga, '\n')
-        print("SISKA IRON PRICE",'\n',siska, '\n')
+        # print("HISTEEL IRON PRICE",'\n',histeel, '\n')
+        # print("SINA IRON PRICE",'\n',sina, '\n')
+        # print("JURAGAN IRON PRICE",'\n',juragan, '\n')
+        # print("NIAGA IRON PRICE",'\n',niaga, '\n')
+        # print("SISKA IRON PRICE",'\n',siska, '\n')
 
     except Exception as e:
         print(e)
@@ -316,3 +317,4 @@ def test():
 
 if __name__ == "__main__":
     perform_daily_scraping()
+    # test()

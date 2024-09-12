@@ -4,7 +4,6 @@ import re
 import pandas as pd
 import requests
 import json
-
 import os
 
 from selenium import webdriver as wd
@@ -473,7 +472,7 @@ class SMSPScraper:
 
         def store_result(source, type, value, unit):
             return {
-                "AS_OF": datetime.now(),
+                "AS_OF": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 "SOURCE": source,
                 "TYPE": type,
                 "VALUE": value,
@@ -543,7 +542,17 @@ class SMSPScraper:
         url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFV24"
         script_dir = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(script_dir, '../global.json')
-
+        if not os.path.isfile(file_path):
+            # If the file does not exist, create a new global.json file
+            with open(file_path, 'w') as f:
+            # You can define the default content of the JSON file here
+                default_data = {
+                    "ironore": 
+                        { 
+                         "last-stored-date": ""
+                        }
+                    }  # Customize the content as needed
+                json.dump(default_data, f, indent=4)
         response = requests.get(url)
         if response.status_code == 200:
         # Parse JSON response
@@ -556,7 +565,7 @@ class SMSPScraper:
             last_record_date = pd.to_datetime(data[-1]["record-date"] + " 16:00:00")
             
             if(last_stored_date >= last_record_date):
-                return ["not doing anything"]
+                return []
              
             # Find the index where the date becomes greater than input_datetime
             start_index = len(data) - 1
@@ -573,7 +582,7 @@ class SMSPScraper:
             # Select specific fields
             selected_data = [
                 {
-                    "AS_OF": pd.to_datetime(item["record-date"] + " 16:00"),
+                    "AS_OF": pd.strptime(item["record-date"] + " 16:00", "%Y-%m-%d %H:%M"),
                     "SOURCE": "sgx.com",
                     "TYPE": "IRON ORE CLOSE PRICE",
                     "VALUE" : item["daily-settlement-price"],
