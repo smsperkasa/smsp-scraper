@@ -58,6 +58,6 @@ if response.status_code == 200:
     # print(snowflake_df)
     
     snowflake_uploader.upload_data_to_snowflake(
-        "RAW", "EXTERNAL_INDICATOR", "IRON_ORE_INDICATOR", snowflake_df
+        "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
     )
     
