@@ -12,10 +12,20 @@ snowflake_uploader = SnowflakeUploader()
 
 response = requests.get(url)
 if response.status_code == 200:
-# Parse JSON response
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            stored_json = json.load(file)
+    if not os.path.isfile(file_path):
+            # If the file does not exist, create a new global.json file
+            with open(file_path, 'w') as f:
+            # You can define the default content of the JSON file here
+                default_data = {
+                    "ironore": 
+                        { 
+                         "last-stored-date": ""
+                        }
+                    }  # Customize the content as needed
+                json.dump(default_data, f, indent=4)
+        
+    with open(file_path, 'r') as file:
+        stored_json = json.load(file)
     data = response.json()['data']
     
     last_stored_date = data[-1]["record-date"]
@@ -26,7 +36,7 @@ if response.status_code == 200:
     
     selected_data = [
                 {
-                    "AS OF": pd.to_datetime(item["record-date"] + " 16:00"),
+                    "AS_OF": item["record-date"] + " 16:00",
                     "SOURCE": "sgx.com",
                     "TYPE": "IRON ORE CLOSE PRICE",
                     "VALUE" : item["daily-settlement-price"],
@@ -37,7 +47,7 @@ if response.status_code == 200:
     snowflake_df = pd.DataFrame(
     selected_data,
     columns=[
-        "AS OF",
+        "AS_OF",
         "SOURCE",
         "TYPE",
         "VALUE",
@@ -47,7 +57,7 @@ if response.status_code == 200:
     
     # print(snowflake_df)
     
-    # snowflake_uploader.upload_data_to_snowflake(
-    #     "RAW", "EXTERNAL_INDICATOR", "IRON_ORE_INDICATOR", snowflake_df
-    # )
+    snowflake_uploader.upload_data_to_snowflake(
+        "RAW", "EXTERNAL_INDICATOR", "IRON_ORE_INDICATOR", snowflake_df
+    )
     

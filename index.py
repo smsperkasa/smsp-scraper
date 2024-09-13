@@ -316,5 +316,5 @@ def test():
     # )
 
 if __name__ == "__main__":
-    perform_daily_scraping()
-    # test()
+    # perform_daily_scraping()
+    test()

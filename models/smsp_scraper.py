@@ -582,7 +582,7 @@ class SMSPScraper:
             # Select specific fields
             selected_data = [
                 {
-                    "AS_OF": pd.strptime(item["record-date"] + " 16:00", "%Y-%m-%d %H:%M"),
+                    "AS_OF": item["record-date"] + " 16:00:00",
                     "SOURCE": "sgx.com",
                     "TYPE": "IRON ORE CLOSE PRICE",
                     "VALUE" : item["daily-settlement-price"],
