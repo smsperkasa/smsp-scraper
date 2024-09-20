@@ -41,11 +41,11 @@ def getActualValueFromMetric(rows, index):
 
 def print_result(source, type, value, unit):
     try:
-        print("As for:", datetime.now())
-        print("Source:", source)
-        print("Type:", type)
-        print("Value:", value)
-        print("Unit:", unit, '\n')
+        print("AS_OF:", datetime.now())
+        print("SOURCE:", source)
+        print("TYPE:", type)
+        print("VALUE:", value)
+        print("UNIT:", unit, '\n')
     except Exception as e:
         print("Error printing result:", e)
 
