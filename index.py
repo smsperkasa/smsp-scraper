@@ -1,5 +1,7 @@
 import sys
 from datetime import datetime
+import os
+import json 
 
 import pandas as pd
 
@@ -13,11 +15,68 @@ smsp_scraper = SMSPScraper()
 snowflake_uploader = SnowflakeUploader()
 currency_converter = CurrencyConverter()
 
+
 def perform_daily_scraping():
-    sina_price_cny = smsp_scraper.scrape_sina_price_specific()
-    sina_price_idr = sina_price_cny * currency_converter.get_exchange_rates_latest(
+    latest_cny_converter = currency_converter.get_exchange_rates_latest(
         "CNY", "IDR"
     )
+    
+    latest_usd_converter = currency_converter.get_exchange_rates_latest(
+        "USD", "IDR"
+    )
+    
+    snowflake_currency_data = [
+        [
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "USD/IDR", 
+            latest_usd_converter,
+            "Yahoo Finance"
+        ],
+        [
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "CNY/IDR", 
+            latest_cny_converter,
+            "Yahoo Finance"
+        ]
+    ]
+    
+    snowflake_df = pd.DataFrame(
+    snowflake_currency_data,
+    columns=[
+        "AS_OF",
+        "CURRENCY_EXCHANGE",
+        "VALUE",
+        "SOURCE",
+        ],
+    )
+    
+    snowflake_uploader.upload_data_to_snowflake(
+        "RAW", "EXTERNAL_INDICATORS", "CURRENCIES", snowflake_df
+    )
+    
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, 'global.json')
+    if not os.path.isfile(file_path):
+            # If the file does not exist, create a new global.json file
+            with open(file_path, 'w') as f:
+            # You can define the default content of the JSON file here
+                default_data = {
+                    "currencies": 
+                        { 
+                         "last-stored-date": ""
+                        }
+                    }  # Customize the content as needed
+                json.dump(default_data, f, indent=4)
+    
+    else:
+        with open(file_path, 'r') as file:
+            stored_json = json.load(file)
+        stored_json["currencies"]["last-stored-date"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(file_path, 'w') as file:
+            json.dump(stored_json, file, indent=4)  # `indent=4` for pretty printing
+    
+    sina_price_cny = smsp_scraper.scrape_sina_price_specific()
+    sina_price_idr = sina_price_cny * latest_cny_converter
     snowflake_data = []
     snowflake_data.append(
         [
@@ -314,7 +373,44 @@ def test():
     # snowflake_uploader.upload_data_to_snowflake(
     #     "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATOR", snowflake_df
     # )
+    
+def test_currency():
+    latest_cny_converter = currency_converter.get_exchange_rates_latest(
+        "CNY", "IDR"
+    )
+    
+    latest_usd_converter = currency_converter.get_exchange_rates_latest(
+        "USD", "IDR"
+    )
+    
+    snowflake_currency_data = [
+        [
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "USD/IDR", 
+            latest_usd_converter,
+            "Yahoo Finance"
+        ],
+        [
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "CNY/IDR", 
+            latest_cny_converter,
+            "Yahoo Finance"
+        ]
+    ]
+    
+    snowflake_df = pd.DataFrame(
+    snowflake_currency_data,
+    columns=[
+        "AS_OF",
+        "CURRENCY_EXCHANGE",
+        "VALUE",
+        "SOURCE",
+        ],
+    )
+    
+    print(snowflake_df)
 
 if __name__ == "__main__":
     perform_daily_scraping()
     # test()
+    # test_currency()
