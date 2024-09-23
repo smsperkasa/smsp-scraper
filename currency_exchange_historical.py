@@ -17,7 +17,7 @@ cny_idr_pd["CURRENCY_EXCHANGE"] = "CNY/IDR"
 cny_idr_pd["VALUE"] = cny_idr_pd["VALUE"].str.replace(',', '').astype(float)
 cny_idr_pd["AS_OF"] =  pd.to_datetime(cny_idr_pd["AS_OF"], format="%m/%d/%Y")
 
-cny_idr_pd = cny_idr_pd.drop(["Open", "High", "Low", "Vol.", "Change %", "Date"], axis=1)
+cny_idr_pd = cny_idr_pd.drop(["Open", "High", "Low", "Vol.", "Change %", "Date", "Price"], axis=1)
 
 currency_converter = CurrencyConverter()
 snowflake_uploader = SnowflakeUploader()
