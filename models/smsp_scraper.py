@@ -539,7 +539,7 @@ class SMSPScraper:
             print("Error in main function:", e)
             
     def sgx_ironore_price(self):
-        url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFV24"
+        url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFH25"
         script_dir = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(script_dir, '../global.json')
         if not os.path.isfile(file_path):
