@@ -20,6 +20,9 @@ def perform_daily_scraping():
     iron_ore_price = smsp_scraper.scrape_trading_view_iron_ore_price()
             
             # Check if the iron_ore_price is a string (error message) or a numeric value
+    
+    
+    currency_converter = CurrencyConverter()
     if isinstance(iron_ore_price, (int, float)):
         print(f"IRONORE CURRENT PRICE: {iron_ore_price} USD/tonne")
         snowflake_data = []
