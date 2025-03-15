@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 import json
 import os
+import time
 
 from selenium import webdriver as wd
 from selenium import webdriver
@@ -274,6 +275,7 @@ class SMSPScraper:
 
     def scrape_iron_ore_price(self):
         pass
+     
 
     def scrape_artha_beton_price(self):
         self.driver.get(
@@ -452,11 +454,11 @@ class SMSPScraper:
             
             logger.info(f"Successfully scraped iron ore from TradingView with price {res}")
             
-            return False ,float(res)
+            return float(res)
         
         except Exception as e:
             logger.warning(f"Failed to scrape iron ore price from TradingView", e)
-            return True, e
+            return e
     
     
     def scrape_trading_economics_macroeconomics(self):
@@ -559,45 +561,76 @@ class SMSPScraper:
             data = response.json()['data']
             
             with open(file_path, 'r') as file:
-                stored_json = json.load(file)
+                stored_json = json.load(file)            
+            # Check if the CSV file exists
+            csv_path = "iron_ore.csv"
+            if not os.path.exists(csv_path):
+                print(f"CSV file not found at: {csv_path}")
+                # Check if it exists in the parent directory
+                parent_dir_path = os.path.join("..", "iron_ore.csv")
+                if os.path.exists(parent_dir_path):
+                    csv_path = parent_dir_path
+                    print(f"Using CSV file from parent directory: {csv_path}")
+                else:
+                    print("Iron ore CSV file not found in current or parent directory")
+                    return []
             
-            last_stored_date = pd.to_datetime(stored_json["ironore"]["last-stored-date"])
-            last_record_date = pd.to_datetime(data[-1]["record-date"] + " 16:00:00")
-            
-            if(last_stored_date >= last_record_date):
+            # Read the CSV file
+            try:
+                df = pd.read_csv(csv_path)
+                print(f"CSV file loaded successfully, shape: {df.shape}")
+                
+                # Check the column names to ensure they match what we expect
+                print(f"CSV columns: {df.columns.tolist()}")
+                
+                # Process the data based on the column names
+                if 'as_of' in df.columns and 'value' in df.columns:
+                    # Expected format
+                    result = df[['as_of', 'value']].copy()
+                    result.columns = ['AS_OF', 'VALUE']
+                else:
+                    # Try to adapt to the columns that are available
+                    date_cols = [col for col in df.columns if 'date' in col.lower() or 'as_of' in col.lower()]
+                    value_cols = [col for col in df.columns if 'value' in col.lower() or 'price' in col.lower()]
+                    
+                    if date_cols and value_cols:
+                        result = df[[date_cols[0], value_cols[0]]].copy()
+                        result.columns = ['AS_OF', 'VALUE']
+                    else:
+                        # If we can't identify the columns, just take the first two
+                        print("Couldn't identify date and value columns, using first two columns")
+                        result = df.iloc[:, :2].copy()
+                        result.columns = ['AS_OF', 'VALUE']
+                
+                # Convert to list of dictionaries
+                records = result.to_dict('records')
+                print(f"Processed {len(records)} historical price records")
+                
+                # Return the records in reverse chronological order (most recent first)
+                return sorted(records, key=lambda x: x['AS_OF'], reverse=True)
+            except Exception as e:
+                print(f"Error reading CSV file: {e}")
                 return []
-             
-            # Find the index where the date becomes greater than input_datetime
-            start_index = len(data) - 1
-            for i in range(len(data)-1, 0, -1):
-                item = data[i]
-                record_date_str = item['record-date']
-                record_datetime = pd.to_datetime(record_date_str + " 16:00:00")
-                if record_datetime == last_stored_date:
-                    start_index = i
-                    break
                 
-            filtered_data = data[start_index+1:] if start_index != len(data) - 1 else []
-   
-            # Select specific fields
-            selected_data = [
-                {
-                    "AS_OF": item["record-date"] + " 16:00:00",
-                    "SOURCE": "sgx.com",
-                    "TYPE": "IRON ORE CLOSE PRICE",
-                    "VALUE" : item["daily-settlement-price"],
-                    "UNIT": "USD/tonne"
-                }
-                for item in filtered_data
-            ]
+        except Exception as e:
+            print(f"Error in sgx_ironore_price: {e}")
+            logger.error(f"Failed to load historical iron ore price data: {e}")
+            return []
+
+    def close(self):
+        """
+        Close the web driver
+        """
+        if self.driver:
+            self.driver.quit()
+            print("Browser closed successfully")
             
-            #rewrite json file
-            stored_json["ironore"]["last-stored-date"] = str(last_record_date)
-            # Write the updated data back to the JSON file
-            with open(file_path, 'w') as file:
-                json.dump(stored_json, file, indent=4)  # `indent=4` for pretty printing
-                
-            return selected_data
-        else:
-            error_message = response.text
-            logger.info(f"Successfully scraped iron ore from TradingView with price {error_message}")
+    def __del__(self):
+        """
+        Destructor to ensure browser is closed when object is garbage collected
+        """
+        try:
+            if hasattr(self, 'driver') and self.driver:
+                self.driver.quit()
+        except:
+            pass
