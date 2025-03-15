@@ -541,18 +541,27 @@ class SMSPScraper:
             print("Error in main function:", e)
             
     def sgx_ironore_price(self):
-        """
-        Retrieve historical iron ore price data from CSV file
-        
-        Returns:
-            list: List of dictionaries containing historical iron ore price data
-        """
-        try:
-            print("Reading historical iron ore price data from CSV file...")
-            # Read data from CSV file
-            import pandas as pd
-            import os
+        url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFH25"
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, '../global.json')
+        if not os.path.isfile(file_path):
+            # If the file does not exist, create a new global.json file
+            with open(file_path, 'w') as f:
+            # You can define the default content of the JSON file here
+                default_data = {
+                    "ironore": 
+                        { 
+                         "last-stored-date": ""
+                        }
+                    }  # Customize the content as needed
+                json.dump(default_data, f, indent=4)
+        response = requests.get(url)
+        if response.status_code == 200:
+        # Parse JSON response
+            data = response.json()['data']
             
+            with open(file_path, 'r') as file:
+                stored_json = json.load(file)            
             # Check if the CSV file exists
             csv_path = "iron_ore.csv"
             if not os.path.exists(csv_path):

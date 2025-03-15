@@ -4,7 +4,6 @@ import os
 # from models.snowflake_uploader import SnowflakeUploader
 import pandas as pd
 
-url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFH25"
 script_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(script_dir, 'global.json')
 
@@ -54,10 +53,6 @@ if response.status_code == 200:
         "UNIT",
         ],
     )
-    
-    print(snowflake_df.tail())
-
-    # print(snowflake_df)
     
     # snowflake_uploader.upload_data_to_snowflake(
     #     "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
