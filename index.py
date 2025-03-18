@@ -159,6 +159,31 @@ def perform_daily_scraping():
     snowflake_uploader.upload_data_to_snowflake(
         "RAW", "EXTERNAL_INDICATORS", "CHINESE_REBAR_TRADINGS", snowflake_df
     )
+    
+    #last, scrape the indonesia macroeconomic indicators
+    indonesia_macroeconomics = smsp_scraper.scrape_trading_economics_macroeconomics()
+    if isinstance(indonesia_macroeconomics, list):  # Check if we got valid data
+        snowflake_df = pd.DataFrame(indonesia_macroeconomics)
+        
+        # Ensure columns are in the correct order
+        snowflake_df = snowflake_df[[
+            "AS_OF",
+            "VALUE",
+            "TYPE",
+            "SOURCE",
+            "UNIT",
+        ]]
+        
+        print("Indonesia Macroeconomics Data:")
+        print(snowflake_df)
+        
+        snowflake_uploader.upload_data_to_snowflake(
+            "RAW", "EXTERNAL_INDICATORS", "INDONESIA_INDICATORS", snowflake_df
+        )
+    else:
+        print(f"Error scraping macroeconomics data: {indonesia_macroeconomics}")
+    
+
     # juragan_prices = smsp_scraper.scrape_juragan_material_price()
     # snowflake_data = []
 
