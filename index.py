@@ -20,8 +20,38 @@ def perform_daily_scraping():
     iron_ore_price = smsp_scraper.scrape_trading_view_iron_ore_price()
             
             # Check if the iron_ore_price is a string (error message) or a numeric value
+    #convert the iron_ore_price to a float
+    iron_ore_price = float(iron_ore_price)
     
+    #initialize the snowflake_df for iron ore price
+    snowflake_df = pd.DataFrame(
+    snowflake_currency_data,
+    columns=[
+        "AS_OF",
+        "VALUE",
+        "SOURCE",
+        "UNIT",
+        "TYPE",
+        ],
+    )
     
+    #append the iron ore price to the snowflake_df
+    snowflake_df.append(
+        [
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            iron_ore_price,
+            "tradingview.com",
+            "USD/tonne",
+            "Iron Ore",
+        ],
+    )   
+    
+    #upload the iron ore price to the snowflake_df
+    snowflake_uploader.upload_data_to_snowflake(
+        "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
+    )
+    
+    #next, upload the currency exchange rates to the snowflake_df
     currency_converter = CurrencyConverter()
     if isinstance(iron_ore_price, (int, float)):
         print(f"IRONORE CURRENT PRICE: {iron_ore_price} USD/tonne")
@@ -63,6 +93,7 @@ def perform_daily_scraping():
         "RAW", "EXTERNAL_INDICATORS", "CURRENCIES", snowflake_df
     )
     
+    #then, scrape the sina steel rebar price
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'global.json')
     if not os.path.isfile(file_path):
@@ -444,41 +475,41 @@ def test():
     #     "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATOR", snowflake_df
     # )
     
-def test_currency():
-    latest_cny_converter = currency_converter.get_exchange_rates_latest(
-        "CNY", "IDR"
-    )
+# def test_currency():
+#     latest_cny_converter = currency_converter.get_exchange_rates_latest(
+#         "CNY", "IDR"
+#     )
     
-    latest_usd_converter = currency_converter.get_exchange_rates_latest(
-        "USD", "IDR"
-    )
+#     latest_usd_converter = currency_converter.get_exchange_rates_latest(
+#         "USD", "IDR"
+#     )
     
-    snowflake_currency_data = [
-        [
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "USD/IDR", 
-            latest_usd_converter,
-            "Yahoo Finance"
-        ],
-        [
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "CNY/IDR", 
-            latest_cny_converter,
-            "Yahoo Finance"
-        ]
-    ]
+#     snowflake_currency_data = [
+#         [
+#             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#             "USD/IDR", 
+#             latest_usd_converter,
+#             "Yahoo Finance"
+#         ],
+#         [
+#             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#             "CNY/IDR", 
+#             latest_cny_converter,
+#             "Yahoo Finance"
+#         ]
+#     ]
     
-    snowflake_df = pd.DataFrame(
-    snowflake_currency_data,
-    columns=[
-        "AS_OF",
-        "CURRENCY_EXCHANGE",
-        "VALUE",
-        "SOURCE",
-        ],
-    )
+#     snowflake_df = pd.DataFrame(
+#     snowflake_currency_data,
+#     columns=[
+#         "AS_OF",
+#         "CURRENCY_EXCHANGE",
+#         "VALUE",
+#         "SOURCE",
+#         ],
+#     )
     
-    print(snowflake_df)
+#     print(snowflake_df)
 
 if __name__ == "__main__":
     perform_daily_scraping()
