@@ -19,9 +19,40 @@ snowflake_uploader = SnowflakeUploader()
 def perform_daily_scraping():
     iron_ore_price = smsp_scraper.scrape_trading_view_iron_ore_price()
             
-            # Check if the iron_ore_price is a string (error message) or a numeric value
+    # Check if the iron_ore_price is a string (error message) or a numeric value
+    #convert the iron_ore_price to a float
+    iron_ore_price = float(iron_ore_price)
     
+    #create the iron ore price data for inserting into the snowflake_df
+    snowflake_data = [
+        [  # Wrap the data in another list to create a 2D array
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            iron_ore_price,
+            "tradingview.com",
+            "USD/tonne",
+            "Iron Ore",
+        ]
+    ]
     
+    #initialize the snowflake_df for iron ore price
+    snowflake_df = pd.DataFrame(
+        snowflake_data,
+        columns=[
+            "AS_OF",
+            "VALUE",
+            "SOURCE",
+            "UNIT",
+            "TYPE",
+        ],
+    )
+
+    
+    #upload the iron ore price to the snowflake_df
+    snowflake_uploader.upload_data_to_snowflake(
+        "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
+    )
+    
+    #next, upload the currency exchange rates to the snowflake_df
     currency_converter = CurrencyConverter()
     if isinstance(iron_ore_price, (int, float)):
         print(f"IRONORE CURRENT PRICE: {iron_ore_price} USD/tonne")
@@ -63,6 +94,7 @@ def perform_daily_scraping():
         "RAW", "EXTERNAL_INDICATORS", "CURRENCIES", snowflake_df
     )
     
+    #then, scrape the sina steel rebar price
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'global.json')
     if not os.path.isfile(file_path):
@@ -127,36 +159,61 @@ def perform_daily_scraping():
     snowflake_uploader.upload_data_to_snowflake(
         "RAW", "EXTERNAL_INDICATORS", "CHINESE_REBAR_TRADINGS", snowflake_df
     )
-    juragan_prices = smsp_scraper.scrape_juragan_material_price()
-    snowflake_data = []
-
-    for juragan_price in juragan_prices:
-        snowflake_data.append(
-            [
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                iron_ore_price,
-                "Iron Ore",
-                "tradingview.com",
-                "USD/tonne",
-            ]
-        )
+    
+    #last, scrape the indonesia macroeconomic indicators
+    indonesia_macroeconomics = smsp_scraper.scrape_trading_economics_macroeconomics()
+    if isinstance(indonesia_macroeconomics, list):  # Check if we got valid data
+        snowflake_df = pd.DataFrame(indonesia_macroeconomics)
         
-        snowflake_df = pd.DataFrame(
-            snowflake_data,
-            columns=[
-                "AS_OF",
-                "VALUE",
-                "TYPE",
-                "SOURCE",
-                "UNIT",
-            ],
-        )
+        # Ensure columns are in the correct order
+        snowflake_df = snowflake_df[[
+            "AS_OF",
+            "VALUE",
+            "TYPE",
+            "SOURCE",
+            "UNIT",
+        ]]
+        
+        print("Indonesia Macroeconomics Data:")
+        print(snowflake_df)
         
         snowflake_uploader.upload_data_to_snowflake(
-            "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
+            "RAW", "EXTERNAL_INDICATORS", "INDONESIA_INDICATORS", snowflake_df
         )
     else:
-        print(f"Error in iron ore price: {iron_ore_price}")
+        print(f"Error scraping macroeconomics data: {indonesia_macroeconomics}")
+    
+
+    # juragan_prices = smsp_scraper.scrape_juragan_material_price()
+    # snowflake_data = []
+
+    # for juragan_price in juragan_prices:
+    #     snowflake_data.append(
+    #         [
+    #             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    #             iron_ore_price,
+    #             "Iron Ore",
+    #             "tradingview.com",
+    #             "USD/tonne",
+    #         ]
+    #     )
+        
+    #     snowflake_df = pd.DataFrame(
+    #         snowflake_data,
+    #         columns=[
+    #             "AS_OF",
+    #             "VALUE",
+    #             "TYPE",
+    #             "SOURCE",
+    #             "UNIT",
+    #         ],
+    #     )
+        
+    #     snowflake_uploader.upload_data_to_snowflake(
+    #         "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
+    #     )
+    # else:
+    #     print(f"Error in iron ore price: {iron_ore_price}")
     
     
 #     sina_price_cny = smsp_scraper.scrape_sina_price_specific()
@@ -444,41 +501,41 @@ def test():
     #     "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATOR", snowflake_df
     # )
     
-def test_currency():
-    latest_cny_converter = currency_converter.get_exchange_rates_latest(
-        "CNY", "IDR"
-    )
+# def test_currency():
+#     latest_cny_converter = currency_converter.get_exchange_rates_latest(
+#         "CNY", "IDR"
+#     )
     
-    latest_usd_converter = currency_converter.get_exchange_rates_latest(
-        "USD", "IDR"
-    )
+#     latest_usd_converter = currency_converter.get_exchange_rates_latest(
+#         "USD", "IDR"
+#     )
     
-    snowflake_currency_data = [
-        [
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "USD/IDR", 
-            latest_usd_converter,
-            "Yahoo Finance"
-        ],
-        [
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "CNY/IDR", 
-            latest_cny_converter,
-            "Yahoo Finance"
-        ]
-    ]
+#     snowflake_currency_data = [
+#         [
+#             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#             "USD/IDR", 
+#             latest_usd_converter,
+#             "Yahoo Finance"
+#         ],
+#         [
+#             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#             "CNY/IDR", 
+#             latest_cny_converter,
+#             "Yahoo Finance"
+#         ]
+#     ]
     
-    snowflake_df = pd.DataFrame(
-    snowflake_currency_data,
-    columns=[
-        "AS_OF",
-        "CURRENCY_EXCHANGE",
-        "VALUE",
-        "SOURCE",
-        ],
-    )
+#     snowflake_df = pd.DataFrame(
+#     snowflake_currency_data,
+#     columns=[
+#         "AS_OF",
+#         "CURRENCY_EXCHANGE",
+#         "VALUE",
+#         "SOURCE",
+#         ],
+#     )
     
-    print(snowflake_df)
+#     print(snowflake_df)
 
 if __name__ == "__main__":
     perform_daily_scraping()

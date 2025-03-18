@@ -541,76 +541,77 @@ class SMSPScraper:
             print("Error in main function:", e)
             
     def sgx_ironore_price(self):
-        url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFH25"
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(script_dir, '../global.json')
-        if not os.path.isfile(file_path):
-            # If the file does not exist, create a new global.json file
-            with open(file_path, 'w') as f:
-            # You can define the default content of the JSON file here
-                default_data = {
-                    "ironore": 
-                        { 
-                         "last-stored-date": ""
-                        }
-                    }  # Customize the content as needed
-                json.dump(default_data, f, indent=4)
-        response = requests.get(url)
-        if response.status_code == 200:
-        # Parse JSON response
-            data = response.json()['data']
-            
-            with open(file_path, 'r') as file:
-                stored_json = json.load(file)            
-            # Check if the CSV file exists
-            csv_path = "iron_ore.csv"
-            if not os.path.exists(csv_path):
-                print(f"CSV file not found at: {csv_path}")
-                # Check if it exists in the parent directory
-                parent_dir_path = os.path.join("..", "iron_ore.csv")
-                if os.path.exists(parent_dir_path):
-                    csv_path = parent_dir_path
-                    print(f"Using CSV file from parent directory: {csv_path}")
-                else:
-                    print("Iron ore CSV file not found in current or parent directory")
-                    return []
-            
-            # Read the CSV file
-            try:
-                df = pd.read_csv(csv_path)
-                print(f"CSV file loaded successfully, shape: {df.shape}")
+        try:
+            url = "https://api.sgx.com/derivatives/v1.0/history/symbol/FEFH25"
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(script_dir, '../global.json')
+            if not os.path.isfile(file_path):
+                # If the file does not exist, create a new global.json file
+                with open(file_path, 'w') as f:
+                # You can define the default content of the JSON file here
+                    default_data = {
+                        "ironore": 
+                            { 
+                            "last-stored-date": ""
+                            }
+                        }  # Customize the content as needed
+                    json.dump(default_data, f, indent=4)
+            response = requests.get(url)
+            if response.status_code == 200:
+            # Parse JSON response
+                data = response.json()['data']
                 
-                # Check the column names to ensure they match what we expect
-                print(f"CSV columns: {df.columns.tolist()}")
+                with open(file_path, 'r') as file:
+                    stored_json = json.load(file)            
+                # Check if the CSV file exists
+                csv_path = "iron_ore.csv"
+                if not os.path.exists(csv_path):
+                    print(f"CSV file not found at: {csv_path}")
+                    # Check if it exists in the parent directory
+                    parent_dir_path = os.path.join("..", "iron_ore.csv")
+                    if os.path.exists(parent_dir_path):
+                        csv_path = parent_dir_path
+                        print(f"Using CSV file from parent directory: {csv_path}")
+                    else:
+                        print("Iron ore CSV file not found in current or parent directory")
+                        return []
                 
-                # Process the data based on the column names
-                if 'as_of' in df.columns and 'value' in df.columns:
-                    # Expected format
-                    result = df[['as_of', 'value']].copy()
-                    result.columns = ['AS_OF', 'VALUE']
-                else:
-                    # Try to adapt to the columns that are available
-                    date_cols = [col for col in df.columns if 'date' in col.lower() or 'as_of' in col.lower()]
-                    value_cols = [col for col in df.columns if 'value' in col.lower() or 'price' in col.lower()]
+                # Read the CSV file
+                try:
+                    df = pd.read_csv(csv_path)
+                    print(f"CSV file loaded successfully, shape: {df.shape}")
                     
-                    if date_cols and value_cols:
-                        result = df[[date_cols[0], value_cols[0]]].copy()
+                    # Check the column names to ensure they match what we expect
+                    print(f"CSV columns: {df.columns.tolist()}")
+                    
+                    # Process the data based on the column names
+                    if 'as_of' in df.columns and 'value' in df.columns:
+                        # Expected format
+                        result = df[['as_of', 'value']].copy()
                         result.columns = ['AS_OF', 'VALUE']
                     else:
-                        # If we can't identify the columns, just take the first two
-                        print("Couldn't identify date and value columns, using first two columns")
-                        result = df.iloc[:, :2].copy()
-                        result.columns = ['AS_OF', 'VALUE']
-                
-                # Convert to list of dictionaries
-                records = result.to_dict('records')
-                print(f"Processed {len(records)} historical price records")
-                
-                # Return the records in reverse chronological order (most recent first)
-                return sorted(records, key=lambda x: x['AS_OF'], reverse=True)
-            except Exception as e:
-                print(f"Error reading CSV file: {e}")
-                return []
+                        # Try to adapt to the columns that are available
+                        date_cols = [col for col in df.columns if 'date' in col.lower() or 'as_of' in col.lower()]
+                        value_cols = [col for col in df.columns if 'value' in col.lower() or 'price' in col.lower()]
+                        
+                        if date_cols and value_cols:
+                            result = df[[date_cols[0], value_cols[0]]].copy()
+                            result.columns = ['AS_OF', 'VALUE']
+                        else:
+                            # If we can't identify the columns, just take the first two
+                            print("Couldn't identify date and value columns, using first two columns")
+                            result = df.iloc[:, :2].copy()
+                            result.columns = ['AS_OF', 'VALUE']
+                    
+                    # Convert to list of dictionaries
+                    records = result.to_dict('records')
+                    print(f"Processed {len(records)} historical price records")
+                    
+                    # Return the records in reverse chronological order (most recent first)
+                    return sorted(records, key=lambda x: x['AS_OF'], reverse=True)
+                except Exception as e:
+                    print(f"Error reading CSV file: {e}")
+                    return []
                 
         except Exception as e:
             print(f"Error in sgx_ironore_price: {e}")
