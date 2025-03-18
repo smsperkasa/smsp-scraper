@@ -19,32 +19,33 @@ snowflake_uploader = SnowflakeUploader()
 def perform_daily_scraping():
     iron_ore_price = smsp_scraper.scrape_trading_view_iron_ore_price()
             
-            # Check if the iron_ore_price is a string (error message) or a numeric value
+    # Check if the iron_ore_price is a string (error message) or a numeric value
     #convert the iron_ore_price to a float
     iron_ore_price = float(iron_ore_price)
     
-    #initialize the snowflake_df for iron ore price
-    snowflake_df = pd.DataFrame(
-    snowflake_currency_data,
-    columns=[
-        "AS_OF",
-        "VALUE",
-        "SOURCE",
-        "UNIT",
-        "TYPE",
-        ],
-    )
-    
-    #append the iron ore price to the snowflake_df
-    snowflake_df.append(
-        [
+    #create the iron ore price data for inserting into the snowflake_df
+    snowflake_data = [
+        [  # Wrap the data in another list to create a 2D array
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             iron_ore_price,
             "tradingview.com",
             "USD/tonne",
             "Iron Ore",
+        ]
+    ]
+    
+    #initialize the snowflake_df for iron ore price
+    snowflake_df = pd.DataFrame(
+        snowflake_data,
+        columns=[
+            "AS_OF",
+            "VALUE",
+            "SOURCE",
+            "UNIT",
+            "TYPE",
         ],
-    )   
+    )
+
     
     #upload the iron ore price to the snowflake_df
     snowflake_uploader.upload_data_to_snowflake(
@@ -158,36 +159,36 @@ def perform_daily_scraping():
     snowflake_uploader.upload_data_to_snowflake(
         "RAW", "EXTERNAL_INDICATORS", "CHINESE_REBAR_TRADINGS", snowflake_df
     )
-    juragan_prices = smsp_scraper.scrape_juragan_material_price()
-    snowflake_data = []
+    # juragan_prices = smsp_scraper.scrape_juragan_material_price()
+    # snowflake_data = []
 
-    for juragan_price in juragan_prices:
-        snowflake_data.append(
-            [
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                iron_ore_price,
-                "Iron Ore",
-                "tradingview.com",
-                "USD/tonne",
-            ]
-        )
+    # for juragan_price in juragan_prices:
+    #     snowflake_data.append(
+    #         [
+    #             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    #             iron_ore_price,
+    #             "Iron Ore",
+    #             "tradingview.com",
+    #             "USD/tonne",
+    #         ]
+    #     )
         
-        snowflake_df = pd.DataFrame(
-            snowflake_data,
-            columns=[
-                "AS_OF",
-                "VALUE",
-                "TYPE",
-                "SOURCE",
-                "UNIT",
-            ],
-        )
+    #     snowflake_df = pd.DataFrame(
+    #         snowflake_data,
+    #         columns=[
+    #             "AS_OF",
+    #             "VALUE",
+    #             "TYPE",
+    #             "SOURCE",
+    #             "UNIT",
+    #         ],
+    #     )
         
-        snowflake_uploader.upload_data_to_snowflake(
-            "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
-        )
-    else:
-        print(f"Error in iron ore price: {iron_ore_price}")
+    #     snowflake_uploader.upload_data_to_snowflake(
+    #         "RAW", "EXTERNAL_INDICATORS", "IRON_ORE_INDICATORS", snowflake_df
+    #     )
+    # else:
+    #     print(f"Error in iron ore price: {iron_ore_price}")
     
     
 #     sina_price_cny = smsp_scraper.scrape_sina_price_specific()
