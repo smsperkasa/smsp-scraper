@@ -9,6 +9,8 @@ __pycache__/
 #p8 extensions (for private key)
 *.p8
 
+*.json
+
 #pem extensions (for private key)
 *.pem
 #CSV extensions
